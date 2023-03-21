@@ -7,11 +7,30 @@ import (
 
 	"log"
 
+	"context"
+
 	"github.com/vokuorg/skillrank"
+
+	firebase "firebase.google.com/go"
+  "google.golang.org/api/option"
 )
 
 func main() {
 	graph := skillrank.NewGraph()
+
+	// Use a service account
+	ctx := context.Background()
+	sa := option.WithCredentialsFile("./videovokodb-firebase-adminsdk-rvd1g-b154dac89c.json")
+	app, err := firebase.NewApp(ctx, nil, sa)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer client.Close()
 
 	graph.Link(1, 2, "basic")
 	graph.Link(1, 3, "advanced")
@@ -399,15 +418,20 @@ func main() {
 
 	f, err := os.Create("ranking.json")
 
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+			log.Fatal(err)
+	}
 
-    defer f.Close()
+	defer f.Close()
 
-    _, err2 := f.WriteString(ranking)
+	_, err2 := f.WriteString(ranking)
 
-    if err2 != nil {
-        log.Fatal(err2)
-    }
+	if err2 != nil {
+			log.Fatal(err2)
+	}
+
+	// Write ranking to Firestore
+	client.Collection("statistics").Add(ctx, map[string]interface{}{
+			"ranking": ranking,
+	})
 }
