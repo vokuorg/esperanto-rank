@@ -430,8 +430,8 @@ func main() {
 			log.Fatal(err2)
 	}
 
-	// Write ranking to Firestore
-	client.Collection("statistics").Add(ctx, map[string]interface{}{
-			"ranking": ranking,
+	// Overwrite ranking to Firestore
+	client.Collection("statistics").Doc("speaking-level").Set(ctx, map[string]interface{}{
+		"ranking": ranking,
 	})
 }
